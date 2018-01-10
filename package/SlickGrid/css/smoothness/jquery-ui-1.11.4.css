@@ -153,7 +153,7 @@ button.ui-button-icons-only {
 
 /* button text element */
 .ui-button .ui-button-text {
-	display: block;
+	display: none; // Baohong: changed from "block" to "none" in order to show nicely
 	line-height: normal;
 }
 .ui-button-text-only .ui-button-text {

@@ -33,6 +33,11 @@
 
 
 <style>
+.ui-widget, .tick {
+  font-family: arial;
+  font-size: 8pt;    
+}
+
 body, html {
   margin: 0;
   height: 100%;
@@ -82,14 +87,15 @@ R12	41676367	81.74	12.08	6.18	34067425	82.82	4.7	12.48	42989998	60.3	6.01	23.11	
 
 <div id="canvas1" class="parcoords" style="height:240px;"></div>
 
-<div style="padding:4px;">
+<div style="padding:4px;font-size:10pt;">
 <b>Controls:</b> 
 <b>Brush</b> - Drag vertically along an axis.
 <b>Remove Brush</b> - Tap the axis background.
-<b>Reorder Axes</b> - Drag a label horizontally.
+<b>Reorder Axes</b> - Drag an axis label horizontally.
+<b>Color Lines by Values</b> - Click on an axis label.
 <b>Invert Axis</b> - Double click on an axis label.
 <b>Remove Axis</b> - Drag axis label off the left or the right edge.
-<b>Tooltip</b> - Click on the line to show values, move out of the canvas to remove tooptip.
+<b>Tooltip</b> - Click on a line to show values, move out of the canvas to remove tooptip.
 </div>
 
 <hr>
@@ -160,7 +166,7 @@ The difference of Average (correlation(a, b), correlation(a, c), correlation(a, 
 <table border=0>
 <tr><td>
 Search: <input type="text" id="txtSearch" value="">
-</td><td>Right click on a column to show the explanation.</td></tr>
+</td><td>Right click on a column header to show the explanation.</td></tr>
 </table>
 
 <div id="grid"></div>
@@ -220,12 +226,12 @@ var columns = column_keys.map(function(key, i) {
 // update_colors(d3.keys(data[0])[2]);
 
 // click label to activate coloring
-//parcoords.svg.selectAll(".dimension")
-//	.on("click", update_colors)
-//	.selectAll(".label")
-//		.style("font-size", "10px"); // change font sizes of selected lable
-//
-//
+parcoords.svg.selectAll(".dimension")
+	.on("click", update_colors)
+	.selectAll(".label")
+	.style("font-size", "10px"); // change font sizes of selected label
+
+
 //add hover event
 d3.select("#canvas1 svg")
 	.on("click", function() {
@@ -241,6 +247,9 @@ d3.select("#canvas1 svg")
 // update color and font weight of chart based on axis selection
 // modified from here: https://syntagmatic.github.io/parallel-coordinates/
 function update_colors(dimension) {
+
+console.log(dimension);
+
 	// change the fonts to bold
 	parcoords.svg.selectAll(".dimension")
 		.style("font-weight", "normal")
@@ -251,14 +260,32 @@ function update_colors(dimension) {
 
 	// change color of lines
 	// set domain of color scale
-	var values = parcoords.data().map(function(d) {
-		return parseFloat(d[dimension])
+	var values0 = getActiveData().map(function(d) {
+		return d[dimension];
 	});
+	values = values0.map(function(d) {return parseFloat(d)});
+
+	if (isNaN(values[0])) {
+		var n = {},j=1,i;
+		for(i = 0; i < values0.length; i++) {
+			if (!n[values0[i]]) {
+				n[values0[i]] = j++; 
+			}
+		}
+		for(i = 0; i < values.length; i++) {
+			values[i] = n[values0[i]];
+		}
+	}
+
 	color_set.domain([d3.min(values), d3.max(values)]);
 
 	// change colors for each line
-	parcoords.color(function(d) {
-		return color_set([d[dimension]])
+//	parcoords.color(function(d) {
+//		return color_set([d[dimension]])
+//	}).render();
+
+	parcoords.color(function(d,i) {
+		return color_set(values[i])
 	}).render();
 };
 
@@ -488,10 +515,8 @@ var sortdir = 1;
 
 function comparer(a, b) {
 
-	// Baohong Zhang: fix to sort integer right
-	if (/^[.|d]*
-.test(a[sortcol]) && /^[.|d]*
-.test(b[sortcol])) {
+    // Baohong Zhang: fix to sort numberic values
+    if ($.isNumeric(a[sortcol]) && $.isNumeric(b[sortcol])) {
 		a[sortcol] = parseFloat(a[sortcol], 10);
 		b[sortcol] = parseFloat(b[sortcol], 10);
 	}
@@ -514,9 +539,9 @@ grid.onSort.subscribe(function(e, args) {
 grid.onMouseEnter.subscribe(function(e, args) {
 //	var d = parcoords.brushed() || data;
 	var r = grid.getCellFromEvent(e).row;
-	var i = dataView.getIdxById(grid.getDataItem(r)["id"])  // sorting will change data order
+	var i = dataView.getIdxById(grid.getDataItem(r)["id"])  // Baohong: sorting changes underlying data order
 
-	var d = data;
+	var d = parcoords.brushed() || data;
 	parcoords.highlight([d[i]]);
 	// clean if anything is there
 	cleanTooltip();

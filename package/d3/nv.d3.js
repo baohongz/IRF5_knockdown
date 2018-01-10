@@ -11090,13 +11090,14 @@ nv.models.scatter = function() {
 
                     pointPaths
                         .on('click', function(d) {
+//console.log(d);
                             mouseEventCallback(d, dispatch.elementClick);
                         })
                         .on('dblclick', function(d) {
                             mouseEventCallback(d, dispatch.elementDblClick);
                         })
                         .on('mouseover', function(d) {
-                            mouseEventCallback(d, dispatch.elementMouseover);
+							mouseEventCallback(d, dispatch.elementMouseover);
                         })
                         .on('mouseout', function(d, i) {
                             mouseEventCallback(d, dispatch.elementMouseout);
@@ -11652,9 +11653,12 @@ nv.models.scatterChart = function() {
 
             scatter.dispatch.on('elementMouseover.tooltip', function(evt) {
                 container.select('.nv-series-' + evt.seriesIndex + ' .nv-distx-' + evt.pointIndex)
-                    .attr('y1', evt.pos.top - availableHeight - margin.top);
+// Baohong: whole range cross lines
+//                    .attr('y1', evt.pos.top - availableHeight - margin.top);
+                    .attr('y1', 0-availableHeight);
                 container.select('.nv-series-' + evt.seriesIndex + ' .nv-disty-' + evt.pointIndex)
-                    .attr('x2', evt.pos.left + distX.size() - margin.left);
+//                    .attr('x2', evt.pos.left + distX.size() - margin.left);
+                    .attr('x2', availableWidth+margin.left);
                 tooltip.position(evt.pos).data(evt).hidden(false);
             });
 
